@@ -25,3 +25,7 @@ The molecular viewer initially loads the selected group. Existing exports
 without a group index and bookmarks containing only a model ID still resolve
 through the full index. After selection, viewer links carry both the model ID
 and its group. The partition download list loads when opened.
+
+Both viewers and the generated ranking page share `assets/dashboard.css`.
+The molecular and table rules are scoped to their page types. Installations
+supply their own datasets and deployment configuration separately.
