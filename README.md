@@ -17,8 +17,21 @@ and `label`. Use `--task epitope` for peptide ranking and
 `--label-kind continuous` for numeric assay measurements.
 See the [TCRen browser guide](https://docs.isalgo.dev/tcren/complementarity.html).
 
-Run `node tests/viewer.mjs` with Node 22 or newer to verify cancellation in
-both viewers. The files under `assets/` are the distributable template.
+Use **Side (x/z)** or **Top (x/y)** to switch the projection. Zoom with the
+wheel, the zoom buttons, or the slider. Depth fading and point outlines
+are optional. Chain roles use distinct shapes, and point color represents
+the supplied model label. The model selector shows each outcome and offers
+a binary filter or continuous minimum and maximum controls when the export
+includes label metadata.
+
+Select a residue to inspect its heavy atoms and recorded interchain contacts.
+Select a contact to highlight its atom endpoints. Use **Pin reference** and
+the `[` and `]` keys to compare matching structures within the same reference
+group. Contact heatmaps have residue headers on both axes. Surface plots
+have x/y axes in ångströms.
+
+Run `node tests/viewer.mjs` with Node 22 or newer to check viewer
+cancellation, label filters, atom contact lookup, and heatmap cell states. The files under `assets/` are the distributable template.
 Version tags identify compatible template snapshots for TCRen.
 
 The molecular viewer initially loads the selected group. Existing exports
