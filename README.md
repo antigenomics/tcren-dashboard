@@ -20,3 +20,8 @@ See the [TCRen browser guide](https://docs.isalgo.dev/tcren/complementarity.html
 Run `node tests/viewer.mjs` with Node 22 or newer to verify cancellation in
 both viewers. The files under `assets/` are the distributable template.
 Version tags identify compatible template snapshots for TCRen.
+
+The molecular viewer initially loads the selected group. Existing exports
+without a group index and bookmarks containing only a model ID still resolve
+through the full index. After selection, viewer links carry both the model ID
+and its group. The partition download list loads when opened.
