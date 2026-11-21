@@ -7,6 +7,8 @@
   margin-bottom: 16px;
 }
 
+:root[data-theme="light"] { color-scheme: light; }
+
 :root[data-theme=dark] {
   color-scheme: dark;
 }
@@ -360,7 +362,6 @@
 
 /* Ranked cohort landing page */
 .ranking-home {
-  color-scheme: light dark;
   font: 16px/1.5 system-ui, sans-serif;
   margin: 2rem auto;
   max-width: 68rem;
@@ -368,7 +369,7 @@
 }
 .ranking-home a { color: #165a84; }
 @media (prefers-color-scheme: dark) {
-  .ranking-home a { color: #adcaff; }
+  :root:not([data-theme]) .ranking-home a { color: #adcaff; }
 }
 
 .ranking-home h1 {
