@@ -186,7 +186,7 @@
 }
 .facets {
   display: grid;
-  grid-template-columns: repeat(var(--columns),minmax(160px,1fr));
+  grid-template-columns: repeat(var(--columns),minmax(145px,1fr));
   gap: 18px;
   min-width: 900px;
 }
@@ -209,7 +209,7 @@
 }
 .ranking {
   display: grid;
-  grid-template-columns: minmax(230px,22rem) minmax(0,1fr);
+  grid-template-columns: minmax(230px,19rem) minmax(0,1fr);
   gap: 24px;
 }
 
@@ -366,6 +366,11 @@
   max-width: 68rem;
   padding-inline: 1rem;
 }
+.ranking-home a { color: #165a84; }
+@media (prefers-color-scheme: dark) {
+  .ranking-home a { color: #adcaff; }
+}
+
 .ranking-home h1 {
   font-size: 1.75rem;
   line-height: 1.2;
