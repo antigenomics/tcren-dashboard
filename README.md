@@ -35,6 +35,19 @@ the `[` and `]` keys to compare matching structures within the same reference
 group. Contact heatmaps have residue headers on both axes. Surface plots
 have x/y axes in ångströms.
 
+Highlight multiple models in one reference group and choose **Add
+highlighted** to retain them while changing label or confidence filters.
+Use **Add random matches** to sample filtered models without replacement,
+and **Clear selection** to start over. Color the molecular overlay by
+model, label, ipTM or mean pLDDT. Chain roles use point shapes.
+
+In the table view, open **Compare multiple models**. The binary map is the
+cell-wise label 1 mean minus the label 0 mean where both have observations.
+For a numeric label, ipTM or pLDDT, the weighted map is the mean of each
+available cell value multiplied by its model's population z-score across
+the selected scored models. Hover a cell to see its support. Contact grids
+compare sequence positions within the same facet and reference group.
+
 Run `node tests/viewer.mjs` with Node 22 or newer to check viewer
 cancellation, label filters, atom contact lookup, and heatmap cell states. The files under `assets/` are the distributable template.
 Version tags identify compatible template snapshots for TCRen.
