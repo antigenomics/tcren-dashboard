@@ -1,4 +1,4 @@
-import {modelList, readComparison, writeComparison} from './view-controls.js';
+import {eligibleInterface, modelList, readComparison, writeComparison} from './view-controls.js';
 
 // Both projections use the same normalized molecular scene.
 const $ = id => document.getElementById(id);
@@ -87,7 +87,12 @@ const formatOutcome = value => Number.isFinite(value) ? String(value) : 'Unlabel
 function setupOutcomes() {
     byId = new Map(entries.map(entry => [entry.id,entry]));
     const kind = entries.find(entry => entry.outcome_kind)?.outcome_kind;
-    $('interface-filters').hidden = !entries.some(entry=>entry.contacts_by_role_pair);
+    const models = entries.filter(entry => entry.reference === $('group').value);
+    const annotated = models.some(entry => entry.contacts_by_role_pair);
+    const excluded = annotated ? models.filter(entry => !eligibleInterface(entry)).length : 0;
+    $('interface-rule').textContent = annotated
+        ? 'Peptide contacts required from TCR α and β. '+excluded+' excluded.'
+        : 'Per-chain peptide contact counts unavailable for this group.';
     $('outcome-controls').hidden = !kind;
     $('discrete-label').hidden = kind !== 'binary';
     $('continuous-label').hidden = kind !== 'continuous';
@@ -114,14 +119,6 @@ export function matchesConfidence(value, minimum, maximum) {
     return Number.isFinite(value) &&
         (minimum === '' || value >= Number(minimum)) &&
         (maximum === '' || value <= Number(maximum));
-}
-
-function matchesInterface(counts, requirements) {
-    if (!requirements.any && !requirements.alpha && !requirements.beta) return true;
-    if (!counts) return false;
-    const alpha = counts['alpha:peptide'] ?? 0, beta = counts['beta:peptide'] ?? 0;
-    return (!requirements.any || alpha+beta > 0) &&
-        (!requirements.alpha || alpha > 0) && (!requirements.beta || beta > 0);
 }
 
 function closePairs(scene, threshold, atomic) {
@@ -167,13 +164,13 @@ export function updateStructureOptions() {
     const kind = entries.find(entry => entry.outcome_kind)?.outcome_kind;
     const filter = {discrete:$('discrete').value, minimum:Number($('minimum').value),
         maximum:Number($('maximum').value), unlabelled:$('unlabelled').checked};
-    const requirements = Object.fromEntries(['any','alpha','beta'].map(key=>[key,
-        !$('interface-filters').hidden && $('interface-'+key).checked]));
+    const candidates = entries.filter(entry => entry.reference === group);
+    const annotated = candidates.some(entry => entry.contacts_by_role_pair);
     const iptmMin=$('iptm-min').value, iptmMax=$('iptm-max').value;
     for (const entry of entries.filter(e => e.reference === group &&
             (e.id+' '+(e.display_label||'')+' '+(e.search||'')).toLowerCase().includes(query) &&
             matchesOutcome(e.outcome,kind,filter) &&
-            matchesInterface(e.contacts_by_role_pair,requirements) &&
+            (!annotated || eligibleInterface(e)) &&
             matchesConfidence(confidence(e,'iptm'),Number(iptmMin)===0?'':iptmMin,Number(iptmMax)===1?'':iptmMax) &&
             matchesConfidence(confidence(e,'plddt'),$('plddt-min').value,$('plddt-max').value))) {
         const option = modelOption(entry, kind);
@@ -666,7 +663,9 @@ for(const id of ['minimum','maximum']){
 }
 function restoreComparison() {
     const group = $('group').value;
-    const models = new Map(entries.filter(entry=>entry.reference===group).map(entry=>[entry.id,entry]));
+    const candidates = entries.filter(entry=>entry.reference===group);
+    const annotated = candidates.some(entry=>entry.contacts_by_role_pair);
+    const models = new Map(candidates.filter(entry=>!annotated || eligibleInterface(entry)).map(entry=>[entry.id,entry]));
     comparison.clear();
     for (const id of readComparison(group)) {
         const entry = models.get(id);
@@ -733,7 +732,6 @@ $('color-by').onchange=()=>{
     document.body.dataset.pointColor=$('color-by').value;
     render();
 };
-for(const key of ['any','alpha','beta'])$('interface-'+key).onchange=applyFilters;
 for(const end of ['min','max'])$('iptm-'+end).oninput=()=>{
     const control=$('iptm-'+end);
     const other=$('iptm-'+(end==='min'?'max':'min'));

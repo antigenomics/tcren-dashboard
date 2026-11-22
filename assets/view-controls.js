@@ -161,3 +161,9 @@ export function modelList(container, select, multi=false) {
     }
     container.replaceChildren(grid);
 }
+
+
+export function eligibleInterface(entry) {
+    const counts = entry.contacts_by_role_pair;
+    return (counts?.['alpha:peptide'] ?? 0) > 0 && (counts?.['beta:peptide'] ?? 0) > 0;
+}

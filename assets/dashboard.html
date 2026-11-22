@@ -25,12 +25,7 @@
 <label>pLDDT minimum <input id="plddt-min" type="number" min="0" max="100" step="any"></label>
 <label>pLDDT maximum <input id="plddt-max" type="number" min="0" max="100" step="any"></label>
 </details>
-<fieldset id="interface-filters" hidden>
-<legend>Require peptide contacts</legend>
-<label><input id="interface-any" type="checkbox"> Either TCR chain</label>
-<label><input id="interface-alpha" type="checkbox"> TCR α</label>
-<label><input id="interface-beta" type="checkbox"> TCR β</label>
-</fieldset>
+<p class="interface-rule" id="interface-rule" role="status"></p>
 <select id="structures" multiple hidden aria-label="Structures"></select>
 <div id="structure-rows" class="model-list-scroll" aria-label="Structures" role="region" tabindex="0"></div>
 <div class="compare-actions">

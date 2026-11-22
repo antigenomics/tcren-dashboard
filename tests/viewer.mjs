@@ -47,15 +47,15 @@ assert.equal(key(group,new URL('https://example.test/alias/'),true,
     [{href:'/bundle/maps/?group=',model:true}]),molecular);
 assert.notEqual(key('other',new URL('https://example.test/bundle/views/'),true,[]),molecular);
 assert.notEqual(key(group,new URL('https://example.test/other/views/'),true,[]),molecular);
-const interfaceSource = viewer.slice(viewer.indexOf('function matchesInterface('),
+const closeSource = viewer.slice(viewer.indexOf('function closePairs('),
     viewer.indexOf('function pointColor('));
-const {matchesInterface,closePairs}=vm.runInThisContext(
-    `(() => {${interfaceSource};return {matchesInterface,closePairs};})()`);
-assert.equal(matchesInterface({}, {any:true}),false);
-assert.equal(matchesInterface(undefined, {}),true);
-assert.equal(matchesInterface(undefined, {any:true}),false);
-assert.equal(matchesInterface({'alpha:peptide':1}, {any:true,alpha:true}),true);
-assert.equal(matchesInterface({'alpha:peptide':1}, {alpha:true,beta:true}),false);
+const closePairs=vm.runInThisContext(closeSource+'\nclosePairs');
+const eligible = vm.runInNewContext(shared.slice(shared.indexOf('export function eligibleInterface'))
+    .replace('export ', '')+'\neligibleInterface');
+assert.equal(eligible({contacts_by_role_pair:{}}),false);
+assert.equal(eligible({}),false);
+assert.equal(eligible({contacts_by_role_pair:{'alpha:peptide':1}}),false);
+assert.equal(eligible({contacts_by_role_pair:{'alpha:peptide':1,'beta:peptide':1}}),true);
 const closeFixture={atoms:[{residue:1},{residue:0},{residue:0},{residue:2}],
     residues:[{chain:'A'},{chain:'C'},{chain:'A'}],
     atom_contacts:[{source:0,target:1,distance:1.8},{source:0,target:2,distance:1.6},

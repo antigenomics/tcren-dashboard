@@ -59,8 +59,8 @@ compare sequence positions within the same facet and reference group.
 Use the sidebar's Label and Short ID columns to browse structures. Topography
 and Heatmaps are separate tabs with the same model list and bracket shortcuts.
 Use the ipTM range sliders to filter the molecular list. When the model index
-contains `contacts_by_role_pair`, you can require peptide contacts from either
-TCR chain, α, β, or both. For existing exports, run
+contains `contacts_by_role_pair`, eligible models must have peptide contacts
+from both TCR α and TCR β. This applies to both view lists and saved selections. For existing exports, run
 `python tools/interface_counts.py path/to/maps` to produce the per-model
 metadata from prepared scenes and join it to the viewer indexes by model ID.
 

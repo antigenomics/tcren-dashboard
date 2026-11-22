@@ -1,4 +1,4 @@
-import {modelList, readComparison, writeComparison} from './view-controls.js';
+import {eligibleInterface, modelList, readComparison, writeComparison} from './view-controls.js';
 
 // All scientific values are serialized table rows. This module only filters and colors them.
 const $ = id => document.getElementById(id);
@@ -569,9 +569,18 @@ async function selectGroup(reference, requested) {
       return;
     }
   } else visibleEntries = groups.get(reference);
-  restoreAggregate(reference);
-  if(!visibleEntries.length)return;
+  const annotated=visibleEntries.some(entry=>entry.contacts_by_role_pair);
+  const total=visibleEntries.length;
+  if(annotated) visibleEntries=visibleEntries.filter(eligibleInterface);
+  $('interface-rule').textContent=annotated
+    ? 'Peptide contacts required from TCR α and β. '+(total-visibleEntries.length)+' excluded.'
+    : 'Per-chain peptide contact counts unavailable for this group.';
   $('fixed-partner').value = reference;
+  restoreAggregate(reference);
+  if(!visibleEntries.length){
+    $('status').textContent='No models meet the peptide-contact rule.';
+    return;
+  }
   $('structure').replaceChildren(...visibleEntries.map(entry => {
     const label = [shortLabels.get(entry.id), entry.outcome].filter(Boolean).join(' — ');
     const option = new Option(label, entry.id);
