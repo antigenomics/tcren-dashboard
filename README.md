@@ -38,7 +38,8 @@ have x/y axes in ångströms.
 Highlight multiple models in one reference group and choose **Add
 highlighted** to retain them while changing label or confidence filters.
 Use **Add random matches** to sample filtered models without replacement,
-and **Clear selection** to start over. Color the molecular overlay by
+and **Clear selection** to start over. Saved models carry between the molecular
+and table views in the same browser tab. Color the molecular overlay by
 model, label, ipTM or mean pLDDT. Chain roles use point shapes.
 
 In the table view, open **Compare multiple models**. The binary map is the

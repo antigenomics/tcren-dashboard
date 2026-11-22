@@ -61,8 +61,8 @@ if (search) {
 }
 
 const response = nav.hasAttribute('data-theme-only') ? null : await fetch('navigation.json').catch(() => null);
+const {links = [], corpora = []} = response?.ok ? await response.json() : {};
 if (response?.ok) {
-    const {links = [], corpora = []} = await response.json();
     if (corpora.length) {
         const corpus = document.createElement('select');
         for (const item of corpora) {
@@ -91,5 +91,34 @@ if (response?.ok) {
         sync();
         document.addEventListener('tcren:model', sync);
         nav.append(link);
+    }
+}
+
+// Both views use the molecular route as their dataset identity.
+function comparisonKey(reference, page, table, navigation) {
+    const path = page.pathname.replace(/index\.html$/, '').replace(/\/$/, '');
+    if (!table) return JSON.stringify(['tcren-comparison', path, reference]);
+    const modelLink = navigation.find(item => item.model);
+    const maps = modelLink ? new URL(modelLink.href, page).pathname :
+        path.replace(/\/table-views$/, '').replace(/\/views$/, '/maps');
+    return JSON.stringify(['tcren-comparison', maps.replace(/\/$/, ''), reference]);
+}
+
+export function readComparison(reference, table=false) {
+    try {
+        const key = comparisonKey(reference, new URL(location.href), table, links);
+        const models = JSON.parse(sessionStorage.getItem(key));
+        return Array.isArray(models) ? models.filter(id => typeof id === 'string').slice(0,16) : [];
+    } catch {
+        return [];
+    }
+}
+
+export function writeComparison(reference, models, table=false) {
+    try {
+        const key = comparisonKey(reference, new URL(location.href), table, links);
+        sessionStorage.setItem(key, JSON.stringify([...models]));
+    } catch {
+        // Selection remains available on the current page when storage is disabled.
     }
 }

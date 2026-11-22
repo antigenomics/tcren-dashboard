@@ -36,6 +36,17 @@ const cells = (scores,mode) => aggregateCells(sample,comparisonWeights(scores,mo
 assert.deepEqual(cells([1,1,0],'binary').map(r=>[r.z,r.support.z]),[[3,[2,1]],[null,[1,0]]]);
 assert.deepEqual(cells([1,0,null],'weighted').map(r=>[r.z,r.support.z]),[[1,2],[2,1]]);
 assert.throws(()=>comparisonWeights([1,1],'weighted'),/must vary/);
+const shared = await readFile(new URL('../assets/view-controls.js', import.meta.url), 'utf8');
+const keySource = shared.slice(shared.indexOf('function comparisonKey('),shared.indexOf('export function readComparison'));
+const key = vm.runInNewContext(keySource+'\ncomparisonKey',{URL});
+const group = 'ref';
+const molecular = key(group,new URL('https://example.test/bundle/maps/'),false,[]);
+assert.equal(key(group,new URL('https://example.test/bundle/views/'),true,[]),molecular);
+assert.equal(key(group,new URL('https://example.test/bundle/maps/table-views/'),true,[]),molecular);
+assert.equal(key(group,new URL('https://example.test/alias/'),true,
+    [{href:'/bundle/maps/?group=',model:true}]),molecular);
+assert.notEqual(key('other',new URL('https://example.test/bundle/views/'),true,[]),molecular);
+assert.notEqual(key(group,new URL('https://example.test/other/views/'),true,[]),molecular);
 let started = 0, closed = 0;
 const server = createServer((req, res) => {
     started++;

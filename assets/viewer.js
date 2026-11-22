@@ -1,3 +1,5 @@
+import {readComparison, writeComparison} from './view-controls.js';
+
 // Both projections use the same normalized molecular scene.
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
@@ -38,6 +40,7 @@ async function selectGroup(id) {
         if(controller.signal.aborted)return;
         entries = payload.entries;
         setupOutcomes();
+        restoreComparison();
         updateStructureOptions();
         const options = [...$('structures').options];
         const selected = options.find(option=>option.dataset.modelId===id) ?? options[0];
@@ -121,6 +124,17 @@ function pointColor(entry) {
     return `hsl(${245-210*normalized} 74% 54%)`;
 }
 
+function modelOption(entry, kind) {
+    const label = entry.display_label || entry.id;
+    const option = new Option((entry.outcome_kind || kind) ? 'Label '+formatOutcome(entry.outcome)+' | '+label : label,entry.file);
+    option.dataset.modelId = entry.id;
+    option.title = [label,...(label === entry.id ? [] : [entry.id]),
+        ...[['ipTM','iptm'],['pLDDT','plddt']]
+            .filter(([,key])=>Number.isFinite(confidence(entry,key)))
+            .map(([name,key])=>name+' '+confidence(entry,key))].join(' | ');
+    return option;
+}
+
 export function updateStructureOptions() {
     const select = $('structures');
     const selected = new Set([...select.selectedOptions].map(option => option.value));
@@ -134,13 +148,7 @@ export function updateStructureOptions() {
             matchesOutcome(e.outcome,kind,filter) &&
             ['iptm','plddt'].every(key=>matchesConfidence(confidence(e,key),
                 $(key+'-min').value,$(key+'-max').value)))) {
-        const label = entry.display_label || entry.id;
-        const option = new Option(kind ? 'Label '+formatOutcome(entry.outcome)+' | '+label : label,entry.file);
-        option.dataset.modelId = entry.id;
-        option.title = [label,...(label === entry.id ? [] : [entry.id]),
-            ...[['ipTM','iptm'],['pLDDT','plddt']]
-                .filter(([,key])=>Number.isFinite(confidence(entry,key)))
-                .map(([name,key])=>name+' '+confidence(entry,key))].join(' | ');
+        const option = modelOption(entry, kind);
         option.selected = selected.has(entry.file);
         select.add(option);
     }
@@ -581,6 +589,7 @@ try {
     else {
         const match=entries.find(entry=>entry.id===requested.get('id'));
         if(match)$('group').value=match.reference;
+        restoreComparison();
         updateStructureOptions();
         if(match)$('structures').value=match.file;
         await render();
@@ -601,6 +610,7 @@ $('group').onchange=()=>{
     updatePin();
     if(groupFiles)return selectGroup();
     setupOutcomes();
+    restoreComparison();
     applyFilters();
 };
 $('search').oninput=applyFilters;
@@ -618,6 +628,26 @@ for(const id of ['minimum','maximum']){
     };
     $(id).onchange=applyFilters;
 }
+function restoreComparison() {
+    const group = $('group').value;
+    const models = new Map(entries.filter(entry=>entry.reference===group).map(entry=>[entry.id,entry]));
+    comparison.clear();
+    for (const id of readComparison(group)) {
+        const entry = models.get(id);
+        if (entry) comparison.set(entry.file,modelOption(entry));
+    }
+    showSavedModels();
+}
+function saveComparison() {
+    writeComparison($('group').value,[...comparison.values()].map(option=>option.dataset.modelId));
+    showSavedModels();
+}
+window.addEventListener('pageshow',event=>{
+    if (event.persisted) {
+        restoreComparison();
+        render();
+    }
+});
 function showSavedModels() {
     const select=$('saved-models');
     select.replaceChildren();
@@ -632,7 +662,7 @@ function addModels(options) {
         if (comparison.size >= MAX_COMPARISON) break;
         comparison.set(option.value,option);
     }
-    showSavedModels();
+    saveComparison();
     render();
 }
 $('add-models').onclick=()=>addModels($('structures').selectedOptions);
@@ -642,12 +672,12 @@ $('remove-models').onclick=()=>{
     for (const option of $('structures').selectedOptions) {
         if(removed.has(option.value)) option.selected=false;
     }
-    showSavedModels();
+    saveComparison();
     render();
 };
 $('clear-models').onclick=()=>{
     comparison.clear();
-    showSavedModels();
+    saveComparison();
     $('structures').selectedIndex=-1;
     pinned=null;
     updatePin();
