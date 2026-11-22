@@ -1,3 +1,5 @@
+import {readComparison, writeComparison} from './view-controls.js';
+
 // All scientific values are serialized table rows. This module only filters and colors them.
 const $ = id => document.getElementById(id);
 async function readJSON(path, signal) {
@@ -441,13 +443,32 @@ function aggregateOptions() {
   }
   $('aggregate-status').textContent=aggregateSelection.size+' saved for comparison (maximum 16).';
 }
+function restoreAggregate(reference) {
+  const models = new Map(visibleEntries.map(entry=>[entry.id,entry]));
+  aggregateSelection.clear();
+  for(const id of readComparison(reference,true)) {
+    if(models.has(id)) aggregateSelection.set(id,models.get(id));
+  }
+  if(aggregateSelection.size) $('map-comparison').open=true;
+  aggregateOptions();
+}
+function saveAggregate() {
+  writeComparison($('fixed-partner').value,aggregateSelection.keys(),true);
+  aggregateOptions();
+}
+window.addEventListener('pageshow',event=>{
+  if(event.persisted) {
+    $('aggregate-single').click();
+    restoreAggregate($('fixed-partner').value);
+  }
+});
 function addAggregate(ids) {
   const chosen=new Set(ids);
   for (const entry of visibleEntries) {
     if (aggregateSelection.size >= 16) break;
     if (chosen.has(entry.id)) aggregateSelection.set(entry.id,entry);
   }
-  aggregateOptions();
+  saveAggregate();
 }
 async function renderAggregate() {
   aggregateController?.abort();
@@ -492,11 +513,11 @@ for (const id of ['aggregate-filter','aggregate-min','aggregate-max']) $(id).onc
 $('aggregate-add').onclick=()=>addAggregate([...$('aggregate-models').selectedOptions].map(o=>o.value));
 $('aggregate-remove').onclick=()=>{
   for(const option of $('aggregate-saved').selectedOptions) aggregateSelection.delete(option.value);
-  aggregateOptions();
+  saveAggregate();
 };
 $('aggregate-clear').onclick=()=>{
   aggregateSelection.clear();
-  aggregateOptions();
+  saveAggregate();
   $('aggregate-single').click();
 };
 $('aggregate-random').onclick=()=>{
@@ -547,7 +568,7 @@ async function selectGroup(reference, requested) {
       return;
     }
   } else visibleEntries = groups.get(reference);
-  aggregateOptions();
+  restoreAggregate(reference);
   if(!visibleEntries.length)return;
   $('fixed-partner').value = reference;
   $('structure').replaceChildren(...visibleEntries.map(entry => {
