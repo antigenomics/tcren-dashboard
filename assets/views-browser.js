@@ -1,4 +1,4 @@
-import {readComparison, writeComparison} from './view-controls.js';
+import {modelList, readComparison, writeComparison} from './view-controls.js';
 
 // All scientific values are serialized table rows. This module only filters and colors them.
 const $ = id => document.getElementById(id);
@@ -550,6 +550,7 @@ async function selectGroup(reference, requested) {
   active = null;
   candidateScene = null;
   $('structure').replaceChildren();
+  $('structure-rows').replaceChildren();
   for(const panel of ['fixed-topography','fixed-trace','candidate-trace','topography','heatmaps'])$(panel).replaceChildren();
   if(grouped) {
     $('status').textContent = 'Loading reference group…';
@@ -575,9 +576,11 @@ async function selectGroup(reference, requested) {
     const label = [shortLabels.get(entry.id), entry.outcome].filter(Boolean).join(' — ');
     const option = new Option(label, entry.id);
     option.title = entry.id;
+    option.dataset.label = entry.outcome ?? 'Unlabelled';
     return option;
   }));
   if (visibleEntries.some(entry => entry.id === requested)) $('structure').value = requested;
+  modelList($('structure-rows'),$('structure'));
   const fixed = fixedSurfaces[reference];
   motifFocus = null;
   renderMotif(fixed);
@@ -735,6 +738,46 @@ async function load(){const entry=visibleEntries[$('structure').selectedIndex];i
     document.dispatchEvent(new Event('tcren:model'));
   }catch(error){controller.abort();if(current===generation){active=null;$('topography').replaceChildren();$('heatmaps').replaceChildren();$('status').textContent=`Cannot load ${entry.id}: ${error.message}`;}}
 }
+const tableTabs = ['topography','heatmaps'];
+function selectTab(name, focus=false) {
+  for (const item of tableTabs) {
+    const tab=$('tab-'+item), active=item===name;
+    tab.setAttribute('aria-selected',String(active));
+    tab.tabIndex=active?0:-1;
+    $('panel-'+item).hidden=!active;
+    if (focus && active) tab.focus();
+  }
+}
+for (const [index,name] of tableTabs.entries()) {
+  const button=$('tab-'+name);
+  button.onclick=()=>selectTab(name);
+  button.onkeydown=event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();
+    selectTab(tableTabs[event.key==='Home'?0:event.key==='End'?1:1-index],true);
+  };
+}
+$('jump-motif-heatmaps').addEventListener('click',()=>selectTab('heatmaps'));
+if (location.hash==='#heatmaps') selectTab('heatmaps');
+function stepModel(delta) {
+  const select=$('structure');
+  const next=select.selectedIndex+delta;
+  if(next<0 || next>=select.options.length)return;
+  select.selectedIndex=next;
+  modelList($('structure-rows'),select);
+  $('structure-rows').querySelector('[aria-pressed="true"]')?.scrollIntoView({block:'nearest'});
+  load();
+}
+$('previous-model').onclick=()=>stepModel(-1);
+$('next-model').onclick=()=>stepModel(1);
+document.addEventListener('keydown',event=>{
+  if(event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey ||
+      event.target.closest?.('input, textarea, select, [contenteditable]'))return;
+  if(event.key==='[' || event.key===']'){
+    event.preventDefault();
+    stepModel(event.key==='['?-1:1);
+  }
+});
 const choices = grouped ? index.groups : [...groups].map(([id,models])=>
   ({id,label:models[0].group_label ?? shortLabels.get(id) ?? id}));
 if (choices.length) {

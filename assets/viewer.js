@@ -1,4 +1,4 @@
-import {readComparison, writeComparison} from './view-controls.js';
+import {modelList, readComparison, writeComparison} from './view-controls.js';
 
 // Both projections use the same normalized molecular scene.
 const $ = id => document.getElementById(id);
@@ -32,6 +32,7 @@ async function selectGroup(id) {
     pinned = cameraExtent = null;
     $('structures').replaceChildren();
     $('projection').replaceChildren();
+    $('structure-rows').replaceChildren();
     $('status').textContent = 'Loading group…';
     try {
         const response = await fetch(groupFiles.get($('group').value), {signal:controller.signal});
@@ -86,6 +87,7 @@ const formatOutcome = value => Number.isFinite(value) ? String(value) : 'Unlabel
 function setupOutcomes() {
     byId = new Map(entries.map(entry => [entry.id,entry]));
     const kind = entries.find(entry => entry.outcome_kind)?.outcome_kind;
+    $('interface-filters').hidden = !entries.some(entry=>entry.contacts_by_role_pair);
     $('outcome-controls').hidden = !kind;
     $('discrete-label').hidden = kind !== 'binary';
     $('continuous-label').hidden = kind !== 'continuous';
@@ -114,8 +116,29 @@ export function matchesConfidence(value, minimum, maximum) {
         (maximum === '' || value <= Number(maximum));
 }
 
+function matchesInterface(counts, requirements) {
+    if (!requirements.any && !requirements.alpha && !requirements.beta) return true;
+    if (!counts) return false;
+    const alpha = counts['alpha:peptide'] ?? 0, beta = counts['beta:peptide'] ?? 0;
+    return (!requirements.any || alpha+beta > 0) &&
+        (!requirements.alpha || alpha > 0) && (!requirements.beta || beta > 0);
+}
+
+function closePairs(scene, threshold, atomic) {
+    const pairs = new Map();
+    for (const edge of scene.atom_contacts) {
+        if (!(edge.distance < threshold)) continue;
+        const [a,b] = [edge.source,edge.target].map(id=>scene.atoms[id].residue);
+        if (scene.residues[a].chain === scene.residues[b].chain) continue;
+        const key = (atomic ? [edge.source,edge.target] : [a,b]).sort((x,y)=>x-y).join(':');
+        pairs.set(key, Math.min(pairs.get(key)??Infinity,edge.distance));
+    }
+    return pairs;
+}
+
 function pointColor(entry) {
     const field = $('color-by').value;
+    if (field === 'chain') return '#979da6';
     if (field === 'model') return `hsl(${(35+Math.max(0,entries.indexOf(entry))*137.508)%360} 76% 59%)`;
     if (field === 'outcome') return outcomeColor(entry);
     const value = confidence(entry, field);
@@ -128,6 +151,7 @@ function modelOption(entry, kind) {
     const label = entry.display_label || entry.id;
     const option = new Option((entry.outcome_kind || kind) ? 'Label '+formatOutcome(entry.outcome)+' | '+label : label,entry.file);
     option.dataset.modelId = entry.id;
+    option.dataset.label = formatOutcome(entry.outcome);
     option.title = [label,...(label === entry.id ? [] : [entry.id]),
         ...[['ipTM','iptm'],['pLDDT','plddt']]
             .filter(([,key])=>Number.isFinite(confidence(entry,key)))
@@ -143,16 +167,21 @@ export function updateStructureOptions() {
     const kind = entries.find(entry => entry.outcome_kind)?.outcome_kind;
     const filter = {discrete:$('discrete').value, minimum:Number($('minimum').value),
         maximum:Number($('maximum').value), unlabelled:$('unlabelled').checked};
+    const requirements = Object.fromEntries(['any','alpha','beta'].map(key=>[key,
+        !$('interface-filters').hidden && $('interface-'+key).checked]));
+    const iptmMin=$('iptm-min').value, iptmMax=$('iptm-max').value;
     for (const entry of entries.filter(e => e.reference === group &&
             (e.id+' '+(e.display_label||'')+' '+(e.search||'')).toLowerCase().includes(query) &&
             matchesOutcome(e.outcome,kind,filter) &&
-            ['iptm','plddt'].every(key=>matchesConfidence(confidence(e,key),
-                $(key+'-min').value,$(key+'-max').value)))) {
+            matchesInterface(e.contacts_by_role_pair,requirements) &&
+            matchesConfidence(confidence(e,'iptm'),Number(iptmMin)===0?'':iptmMin,Number(iptmMax)===1?'':iptmMax) &&
+            matchesConfidence(confidence(e,'plddt'),$('plddt-min').value,$('plddt-max').value))) {
         const option = modelOption(entry, kind);
         option.selected = selected.has(entry.file);
         select.add(option);
     }
     if (select.selectedIndex < 0 && select.options.length) select.selectedIndex = 0;
+    modelList($('structure-rows'),select,true);
 }
 
 export async function loadScene(file, {signal} = {}) {
@@ -359,6 +388,8 @@ function draw(svg,vertical,views,atomic,scale) {
         const {scene,nodes,residue,shown,contacts}=view;
         const opacity=pinned?.id===scene.id && views.length>1?.46:1;
         const fill=pointColor(byId.get(scene.id));
+        const chainColor=$('color-by').value==='chain';
+        const close=$('close-contacts').checked ? closePairs(scene,Number($('close-distance').value),atomic) : new Map();
         function line(a,b,attributes,title) {
             if (!shown(a)||!shown(b)) return;
             const [x1,y1]=position(a.xyz),[x2,y2]=position(b.xyz);
@@ -367,8 +398,11 @@ function draw(svg,vertical,views,atomic,scale) {
         for (const edge of contacts) {
             const count=atomic?1:edge.contact_count;
             const copies=!atomic&&$('weight').value==='parallel'?count:1;
-            const title=`${scene.id}: ${count} atom-pair contacts${atomic?' · '+edge.distance.toFixed(2)+' Å':''}`;
-            const attributes={stroke:'#666','stroke-width':!atomic&&$('weight').value==='weighted'?count*.5:.7,
+            const distance=close.get([edge.source,edge.target].sort((a,b)=>a-b).join(':'));
+            const title=`${scene.id}: ${count} atom-pair contacts${atomic?' · '+edge.distance.toFixed(2)+' Å':''}`+
+                (distance===undefined?'':' · Close contact '+distance.toFixed(2)+' Å');
+            const attributes={stroke:distance===undefined?'#666':'#f06043',
+                'stroke-width':distance===undefined?(!atomic&&$('weight').value==='weighted'?count*.5:.7):2,
                 'stroke-dasharray':'3 3',opacity,fill:'none'};
             for (let k=0;k<copies;k++) {
                 if(copies===1) {line(nodes[edge.source],nodes[edge.target],attributes,title);continue;}
@@ -390,7 +424,7 @@ function draw(svg,vertical,views,atomic,scale) {
             const name=`${scene.id} | ${r.chain} ${r.region} ${r.aa}${r.number}${r.insertion}${atomic?' '+node.name+' '+node.altloc:''}\nID ${node.id}; ${node.contact_count} global atom contacts; degree ${node.contact_degree}; covalent degree ${node.covalent_degree}\n${view.visibleCounts.get(node.id)||0} atom contacts after filters`;
             const radius=atomic?2.5:4.7;
             const point=svgElement(svg,'path',{d:SHAPES[r.role]??SHAPES.alpha,
-                transform:`translate(${cx} ${cy}) scale(${radius})`,fill,
+                transform:`translate(${cx} ${cy}) scale(${radius})`,fill:chainColor?(COLORS[r.role]??fill):fill,
                 'vector-effect':'non-scaling-stroke',
                 stroke:$('outlines').checked?'var(--map-outline, #333)':'none','stroke-width':1,
                 opacity:opacity*(near>far?.22+.78*(node.xyz[hiddenAxis]-far)/(near-far):1),tabindex:0,
@@ -462,6 +496,8 @@ async function render() {
         count.textContent=comparison.size+' saved · '+selected.length+' visible'+
             (requested.length>MAX_COMPARISON?' · Up to '+MAX_COMPARISON+' at once':'');
         $('structures').title=candidate?.title ?? '';
+        for (const [index,button] of [...$('structure-rows').querySelectorAll('button')].entries())
+            button.setAttribute('aria-pressed',String($('structures').options[index].selected));
         const loaded = new Map(currentViews.map(view => [view.scene.id,view.scene]));
         const scenes=await Promise.all(selected.map(o=>loaded.get(o.dataset.modelId) ??
             loadScene(o.value,{signal:controller.signal})));
@@ -693,7 +729,18 @@ $('random-models').onclick=()=>{
     }
     addModels(pool.slice(0,count));
 };
-$('color-by').onchange=render;
+$('color-by').onchange=()=>{
+    document.body.dataset.pointColor=$('color-by').value;
+    render();
+};
+for(const key of ['any','alpha','beta'])$('interface-'+key).onchange=applyFilters;
+for(const end of ['min','max'])$('iptm-'+end).oninput=()=>{
+    const control=$('iptm-'+end);
+    const other=$('iptm-'+(end==='min'?'max':'min'));
+    if(Number($('iptm-min').value)>Number($('iptm-max').value)) control.value=other.value;
+    $('iptm-'+end+'-value').textContent=control.value;
+};
+$('close-contacts').onchange=$('close-distance').onchange=redraw;
 $('pin-model').onclick=()=>{
     const option=$('structures').selectedOptions[0];
     if(!pinned && !option)return;

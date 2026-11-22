@@ -47,6 +47,21 @@ assert.equal(key(group,new URL('https://example.test/alias/'),true,
     [{href:'/bundle/maps/?group=',model:true}]),molecular);
 assert.notEqual(key('other',new URL('https://example.test/bundle/views/'),true,[]),molecular);
 assert.notEqual(key(group,new URL('https://example.test/other/views/'),true,[]),molecular);
+const interfaceSource = viewer.slice(viewer.indexOf('function matchesInterface('),
+    viewer.indexOf('function pointColor('));
+const {matchesInterface,closePairs}=vm.runInThisContext(
+    `(() => {${interfaceSource};return {matchesInterface,closePairs};})()`);
+assert.equal(matchesInterface({}, {any:true}),false);
+assert.equal(matchesInterface(undefined, {}),true);
+assert.equal(matchesInterface(undefined, {any:true}),false);
+assert.equal(matchesInterface({'alpha:peptide':1}, {any:true,alpha:true}),true);
+assert.equal(matchesInterface({'alpha:peptide':1}, {alpha:true,beta:true}),false);
+const closeFixture={atoms:[{residue:1},{residue:0},{residue:0},{residue:2}],
+    residues:[{chain:'A'},{chain:'C'},{chain:'A'}],
+    atom_contacts:[{source:0,target:1,distance:1.8},{source:0,target:2,distance:1.6},
+        {source:0,target:3,distance:2},{source:1,target:3,distance:1.2}]};
+assert.deepEqual([...closePairs(closeFixture,2,false)],[['0:1',1.6]]);
+assert.deepEqual([...closePairs(closeFixture,2,true)],[['0:1',1.8],['0:2',1.6]]);
 let started = 0, closed = 0;
 const server = createServer((req, res) => {
     started++;
@@ -67,7 +82,7 @@ const until = async predicate => {
 const elements = new Map();
 const element = id => {
     if (!elements.has(id)) elements.set(id, {selectedOptions: [], value: '1', textContent: '',
-        setAttribute() {}, replaceChildren() {}, append() {}});
+        setAttribute() {}, replaceChildren() {}, append() {}, querySelectorAll() { return []; }});
     return elements.get(id);
 };
 const context = vm.createContext({fetch: (url, options) => fetch(new URL(url, base), options),
@@ -149,7 +164,7 @@ try {
     context.fetch = (url, options) => fetch(new URL(url, base), options);
 
     const tableLoad = tables.slice(tables.indexOf('async function load()'),
-        tables.indexOf('const choices = grouped'));
+        tables.indexOf('const tableTabs'));
     vm.runInContext(`generation=0;let loadController=null,active=null;
         let candidateScene=null,motifFocus=null;const grouped=false;
         function updateCandidateMotif(){}

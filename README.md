@@ -56,6 +56,19 @@ available cell value multiplied by its model's population z-score across
 the selected scored models. Hover a cell to see its support. Contact grids
 compare sequence positions within the same facet and reference group.
 
+Use the sidebar's Label and Short ID columns to browse structures. Topography
+and Heatmaps are separate tabs with the same model list and bracket shortcuts.
+Use the ipTM range sliders to filter the molecular list. When the model index
+contains `contacts_by_role_pair`, you can require peptide contacts from either
+TCR chain, α, β, or both. For existing exports, run
+`python tools/interface_counts.py path/to/maps` to produce the per-model
+metadata from prepared scenes and join it to the viewer indexes by model ID.
+
+Choose **Chain** to color points by chain role. **Highlight close contacts**
+marks recorded noncovalent interchain atom pairs below the adjustable distance
+(default 2 Å), or their containing residue pair in residue view. This is a
+geometric inspection tool.
+
 Run `node tests/viewer.mjs` with Node 22 or newer to check viewer
 cancellation, label filters, atom contact lookup, and heatmap cell states. The files under `assets/` are the distributable template.
 Version tags identify compatible template snapshots for TCRen.

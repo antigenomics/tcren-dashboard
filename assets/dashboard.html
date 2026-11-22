@@ -20,12 +20,19 @@
 <label><input id="unlabelled" type="checkbox" checked> Include unlabelled</label>
 </fieldset></div>
 <details id="confidence-filters"><summary>Confidence filters</summary>
-<label>ipTM minimum <input id="iptm-min" type="number" min="0" max="1" step="any"></label>
-<label>ipTM maximum <input id="iptm-max" type="number" min="0" max="1" step="any"></label>
+<label>ipTM minimum <output id="iptm-min-value">0</output><input id="iptm-min" type="range" min="0" max="1" step="0.001" value="0"></label>
+<label>ipTM maximum <output id="iptm-max-value">1</output><input id="iptm-max" type="range" min="0" max="1" step="0.001" value="1"></label>
 <label>pLDDT minimum <input id="plddt-min" type="number" min="0" max="100" step="any"></label>
 <label>pLDDT maximum <input id="plddt-max" type="number" min="0" max="100" step="any"></label>
 </details>
-<label>Structure <select id="structures" size="7" multiple></select></label>
+<fieldset id="interface-filters" hidden>
+<legend>Require peptide contacts</legend>
+<label><input id="interface-any" type="checkbox"> Either TCR chain</label>
+<label><input id="interface-alpha" type="checkbox"> TCR α</label>
+<label><input id="interface-beta" type="checkbox"> TCR β</label>
+</fieldset>
+<select id="structures" multiple hidden aria-label="Structures"></select>
+<div id="structure-rows" class="model-list-scroll" aria-label="Structures" role="region" tabindex="0"></div>
 <div class="compare-actions">
 <button id="add-models" type="button">Add highlighted</button>
 <button id="clear-models" type="button">Clear selection</button>
@@ -59,11 +66,14 @@
 <fieldset><legend>Chains</legend><div id="chains"></div></fieldset>
 <fieldset><legend>Regions</legend><div id="regions"></div></fieldset>
 <fieldset><legend>Contact groups</legend><div id="edges"></div></fieldset>
-</aside><section><div class="chain-key" aria-label="Chain shapes">● TCR α &nbsp; ■ TCR β &nbsp; ▲ Peptide &nbsp; ◆ MHC &nbsp; ✚ β2m</div>
+</aside><section><div class="chain-key" aria-label="Chain shapes">
+<span style="--chain:#0072b2">● TCR α</span><span style="--chain:#56b4e9">■ TCR β</span>
+<span style="--chain:#d55e00">▲ Peptide</span><span style="--chain:#009e73">◆ MHC</span>
+<span style="--chain:#999999">✚ β2m</span></div>
 <p id="outcome-key"></p>
 <div class="map-toolbar">
 <label>Point color <select id="color-by">
-<option value="model">Model</option><option value="outcome" selected>Label</option>
+<option value="chain">Chain</option><option value="model">Model</option><option value="outcome" selected>Label</option>
 <option value="iptm">ipTM</option><option value="plddt">pLDDT</option>
 </select></label>
 <div role="group" aria-label="Projection">
@@ -76,6 +86,10 @@
 </div>
 <label><input id="depth" type="checkbox"> <span id="depth-label">Fade by y depth</span></label>
 <label><input id="outlines" type="checkbox"> Point outlines</label>
+<div class="close-control" title="Highlight noncovalent interchain atom pairs below the chosen distance.">
+<label><input id="close-contacts" type="checkbox"> Highlight close contacts</label>
+<label>&lt; <input id="close-distance" aria-label="Close-contact distance in ångströms" type="number" min="0.1" max="5" step="0.1" value="2"> Å</label>
+</div>
 </div>
 <div class="views"><svg id="projection" viewBox="0 0 700 560" aria-label="Side contact view"></svg></div>
 <details open class="residue-inspector"><summary>Residue and atom contacts</summary>

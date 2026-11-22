@@ -511,3 +511,24 @@
     height: 9rem;
   }
 }
+
+.model-list-scroll { max-height: 18rem; overflow: auto; margin-block: .5rem; }
+.model-list { width: 100%; border-collapse: collapse; text-align: left; }
+.model-list th { position: sticky; top: 0; background: Canvas; color: CanvasText; }
+.model-list :is(th,td) { padding: .2rem .35rem; }
+.model-list button { width: 100%; text-align: left; border: 1px solid transparent; background: transparent; color: inherit; }
+.model-list button[aria-pressed=true] { border-color: currentColor; background: color-mix(in srgb, Highlight 22%, Canvas); }
+.map-toolbar [role=tab][aria-selected=true] { font-weight: 700; border-color: currentColor; }
+#close-distance { width: 4.4rem; }
+#iptm-min, #iptm-max { display: block; }
+@media (min-width: 900px) {
+  .table-view .ranking aside { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow: auto; }
+}
+
+.chain-key, .close-control { display: flex; flex-wrap: wrap; gap: .35rem .7rem; align-items: center; }
+[data-point-color=chain] .chain-key span { border-inline-start: .24rem solid var(--chain); padding-inline-start: .35rem; }
+.map-toolbar .close-control label { margin: 0; }
+.model-list td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.table-view .model-details { margin-block: .35rem; }
+#map-comparison { scroll-margin-top: 1rem; margin-top: .9rem; }
+#panel-topography figcaption { min-height: 2.65em; }
