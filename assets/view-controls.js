@@ -122,3 +122,42 @@ export function writeComparison(reference, models, table=false) {
         // Selection remains available on the current page when storage is disabled.
     }
 }
+
+// Keep the native selector as the keyboard-navigation and model-link state.
+export function modelList(container, select, multi=false) {
+    const grid = document.createElement('table');
+    grid.className = 'model-list';
+    const heading = grid.createTHead().insertRow();
+    for (const title of ['Label','Short ID']) {
+        const th = document.createElement('th');
+        th.scope = 'col';
+        th.textContent = title;
+        heading.append(th);
+    }
+    const rows = grid.createTBody();
+    for (const option of select.options) {
+        const row = rows.insertRow();
+        row.title = option.title;
+        const label = option.dataset.label ?? '—';
+        const numeric = Number(label);
+        const cell = row.insertCell();
+        cell.textContent = Number.isFinite(numeric) && label.length > 8 ? String(Number(numeric.toPrecision(6))) : label;
+        cell.title = label;
+        const control = document.createElement('button');
+        control.type = 'button';
+        const id = option.dataset.modelId ?? option.value;
+        control.textContent = id.length > 14 ? id.slice(0,12)+'…' : id;
+        control.setAttribute('aria-label',id+' | Label '+(option.dataset.label??'unlabelled'));
+        control.setAttribute('aria-pressed',String(option.selected));
+        control.onclick = () => {
+            if (multi) option.selected = !option.selected;
+            else select.value = option.value;
+            for (const [index, button] of [...rows.querySelectorAll('button')].entries())
+                button.setAttribute('aria-pressed',String(select.options[index].selected));
+            select.dispatchEvent(new Event('change'));
+        };
+        row.insertCell().append(control);
+        row.onclick = event => { if (event.target !== control) control.click(); };
+    }
+    container.replaceChildren(grid);
+}

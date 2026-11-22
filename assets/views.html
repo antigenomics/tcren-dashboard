@@ -7,19 +7,39 @@
 <aside aria-labelledby="fixed-heading">
 <h2 id="fixed-heading">Fixed partner</h2>
 <label><span id="fixed-label">Reference</span> <select id="fixed-partner"></select></label>
+<span id="candidate-label">Structure</span>
+<select id="structure" hidden aria-label="Structure"></select>
+<div id="structure-rows" class="model-list-scroll" aria-label="Structures" role="region" tabindex="0"></div>
+<div class="compare-actions">
+<button id="previous-model" type="button">Previous</button>
+<button id="next-model" type="button">Next</button>
+<a href="#map-comparison">Compare models</a>
+</div>
+<details><summary>Reference structure</summary>
 <p id="reference-angles" hidden></p>
 <section id="fixed-motif" hidden></section>
-<div id="fixed-trace"></div><h3 id="fixed-surface-heading" hidden></h3><div id="fixed-topography"></div>
+<div id="fixed-trace"></div><h3 id="fixed-surface-heading" hidden></h3><div id="fixed-topography"></div></details>
 </aside>
 <main><header><h2 id="candidate-heading">Candidate</h2>
-<label><span id="candidate-label">Structure</span> <select id="structure"></select></label>
 <p id="outcome" aria-live="polite" hidden></p>
 <div id="known-motif" hidden></div>
 <p id="motif-selection" role="status"></p>
 <button id="clear-motif" type="button" hidden>Clear residue highlight</button>
 <a id="jump-motif-heatmaps" href="#heatmaps" hidden>View outlined contacts in heatmaps</a>
+<details class="model-details"><summary>Model details</summary><p id="status" role="status">Loading tables…</p><p id="model-metrics" aria-live="polite" hidden></p></details><a id="molecular-view" hidden>Open molecular skeleton</a></header>
+<div id="candidate-trace" hidden></div><p id="active-comparison" hidden></p><div role="tablist" aria-label="Table plots" class="map-toolbar">
+<button id="tab-topography" role="tab" aria-selected="true" aria-controls="panel-topography">Topography</button>
+<button id="tab-heatmaps" role="tab" aria-selected="false" aria-controls="panel-heatmaps" tabindex="-1">Heatmaps</button>
+</div>
+<section id="panel-topography" role="tabpanel" aria-labelledby="tab-topography">
+<div id="topography"></div><p id="definitions"></p>
+</section>
+<section id="panel-heatmaps" role="tabpanel" aria-labelledby="tab-heatmaps" hidden>
 <label>Contact map <select id="metric"><option value="ca_distance">Cα distance (Å)</option><option value="atom_contact_count">Atom contact witnesses</option></select></label>
-<label><input id="contacts" type="checkbox">Contacting pairs only</label><p id="status" role="status">Loading tables…</p><p id="model-metrics" aria-live="polite" hidden></p><a id="molecular-view" hidden>Open molecular skeleton</a></header>
+<label><input id="contacts" type="checkbox">Contacting pairs only</label><fieldset id="rows"><legend>Partner rows</legend></fieldset><fieldset id="columns"><legend>TCR columns</legend></fieldset>
+<p id="scale"></p><div style="overflow:auto"><div class="facets" id="heatmaps"></div></div>
+</section>
+<pre id="details" aria-live="polite">Hover a cell for values and support. Gray cells are missing; hatched cells are masked.</pre>
 <details id="map-comparison">
 <summary>Compare multiple models</summary>
 <label>Filter by <select id="aggregate-filter"><option value="outcome">Label</option><option value="iptm">ipTM</option><option value="plddt">pLDDT</option></select></label>
@@ -38,9 +58,4 @@
 <button type="button" id="aggregate-single">Show single model</button>
 <p id="aggregate-status" role="status"></p>
 </details>
-<p>Hover a cell to inspect its value and identifiers or aggregate support. Gray cells are missing and hatched cells are masked.</p>
-<div id="candidate-trace" hidden></div><p id="active-comparison" hidden></p><div id="topography"></div><p id="definitions"></p>
-<fieldset id="rows"><legend>Partner rows</legend></fieldset><fieldset id="columns"><legend>TCR columns</legend></fieldset>
-<p id="scale"></p><div style="overflow:auto"><div class="facets" id="heatmaps"></div></div>
-<pre id="details" aria-live="polite">Hover a cell for residue/atom identifiers and values.</pre>
 </main></div><script type="module" src="views-browser.js?v=table-groups-1"></script></body></html>
