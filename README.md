@@ -5,6 +5,11 @@ The template uses browser-native JavaScript and has no runtime package
 dependencies. TCRen generates the ranking page and all model data, and
 copies pinned viewer assets into the bundle.
 
+Viewer-only changes ship as dashboard template releases. A deployment that
+serves a separately pinned template can update those assets without upgrading
+TCRen. The TCRen CLI exports the data and bundles a verified template snapshot
+for offline use.
+
 Build a dashboard from one scoring cohort with TCRen 4.7 or later.
 
 ```sh
@@ -39,7 +44,9 @@ Highlight multiple models in one reference group and choose **Add
 highlighted** to retain them while changing label or confidence filters.
 Use **Add random matches** to sample filtered models without replacement,
 and **Clear selection** to start over. Saved models carry between the molecular
-and table views in the same browser tab. Color the molecular overlay by
+and table views in the same browser tab, within the same dataset and
+reference group. Add, remove, or clear saved models in either view and
+the other view uses the updated set. Color the molecular overlay by
 model, label, ipTM or mean pLDDT. Chain roles use point shapes.
 
 In the table view, open **Compare multiple models**. The binary map is the
