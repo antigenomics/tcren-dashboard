@@ -20,9 +20,14 @@ See the [TCRen browser guide](https://docs.isalgo.dev/tcren/complementarity.html
 Use **Side (x/z)** or **Top (x/y)** to switch the projection. Zoom with the
 wheel, the zoom buttons, or the slider. Depth fading and point outlines
 are optional. Chain roles use distinct shapes, and point color represents
-the supplied model label. The model selector shows each outcome and offers
-a binary filter or continuous minimum and maximum controls when the export
-includes label metadata.
+the supplied model label.
+
+The structure selector shows the outcome label first, so it stays visible
+when a long model name is clipped. Hover over a model in the list to see
+its full name.
+
+Use the label menu for binary outcomes or the minimum and maximum controls
+for continuous outcomes when the export includes label metadata.
 
 Select a residue to inspect its heavy atoms and recorded interchain contacts.
 Select a contact to highlight its atom endpoints. Use **Pin reference** and
